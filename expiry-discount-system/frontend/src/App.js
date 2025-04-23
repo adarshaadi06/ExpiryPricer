@@ -1,59 +1,65 @@
-import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+// ============================================
+// File: src/App.js
+// ============================================
+import React, { useState, useContext, createContext } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom';
 import './App.css';
-
-// Import components
 import Dashboard from './components/Dashboard';
 import ProductList from './components/ProductList';
 import InventoryList from './components/InventoryList';
 import DiscountRules from './components/DiscountRules';
+import Login from './components/Login';
+import Profile from './components/Profile';
+
+// Auth Context
+const AuthContext = createContext();
+export const useAuth = () => useContext(AuthContext);
 
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  
+  const [user, setUser] = useState(null);
+
+  const login = (userData) => setUser(userData);
+  const logout = () => setUser(null);
+
   return (
-    <Router>
-      <div className="app-container">
-        {/* Sidebar */}
-        <div className={`sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
-          <div className="sidebar-header">
-            <h2>Discount System</h2>
-            <button 
-              className="toggle-button" 
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-            >
-              {sidebarOpen ? '←' : '→'}
-            </button>
-          </div>
-          <nav className="sidebar-nav">
-            <ul>
-              <li>
+    <AuthContext.Provider value={{ user, login, logout }}>
+      <Router>
+        {user ? (
+          <div className="app-container">
+            <aside className={`sidebar ${sidebarOpen ? 'open' : 'closed'}`}>  
+              <div className="sidebar-header">
+                <h2>Admin Panel</h2>
+                <button onClick={() => setSidebarOpen(!sidebarOpen)}> {sidebarOpen ? '←' : '→'} </button>
+              </div>
+              <nav>
                 <Link to="/">Dashboard</Link>
-              </li>
-              <li>
                 <Link to="/products">Products</Link>
-              </li>
-              <li>
                 <Link to="/inventory">Inventory</Link>
-              </li>
-              <li>
-                <Link to="/discount-rules">Discount Rules</Link>
-              </li>
-            </ul>
-          </nav>
-        </div>
-        
-        {/* Main content */}
-        <div className="main-content">
+                <Link to="/discount-rules">Rules</Link>
+                <Link to="/profile">Profile</Link>
+                <button className="logout-btn" onClick={logout}>Logout</button>
+              </nav>
+            </aside>
+            <main className="main-content">
+              <Routes>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/products" element={<ProductList />} />
+                <Route path="/inventory" element={<InventoryList />} />
+                <Route path="/discount-rules" element={<DiscountRules />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="*" element={<Navigate to="/" />} />
+              </Routes>
+            </main>
+          </div>
+        ) : (
           <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/products" element={<ProductList />} />
-            <Route path="/inventory" element={<InventoryList />} />
-            <Route path="/discount-rules" element={<DiscountRules />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="*" element={<Navigate to="/login" />} />
           </Routes>
-        </div>
-      </div>
-    </Router>
+        )}
+      </Router>
+    </AuthContext.Provider>
   );
 }
 
